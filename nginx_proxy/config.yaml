@@ -1,0 +1,45 @@
+version: 0.0.1
+hassio_api: true
+slug: nginx_proxy_pp
+name: NGINX SSL Proxy (Proxy Protocol)
+description: An SSL/TLS proxy with optional separate proxy protocol port
+url: https://github.com/tobsee/addons
+arch:
+  - armhf
+  - armv7
+  - aarch64
+  - amd64
+  - i386
+init: false
+map:
+  - ssl
+  - share
+options:
+  domain: null
+  hsts: max-age=31536000; includeSubDomains
+  certfile: fullchain.pem
+  keyfile: privkey.pem
+  cloudflare: false
+  customize:
+    active: false
+    default: nginx_proxy_default*.conf
+    servers: nginx_proxy/*.conf
+  real_ip_from: []
+  split_proxy_protocol: false
+ports:
+  443/tcp: 443
+  80/tcp: null
+  8444/tcp: null
+schema:
+  domain: str
+  hsts: str
+  certfile: str
+  keyfile: str
+  cloudflare: bool
+  customize:
+    active: bool
+    default: str
+    servers: str
+  real_ip_from:
+    - str
+  split_proxy_protocol: bool

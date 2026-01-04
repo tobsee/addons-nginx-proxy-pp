@@ -1,4 +1,3 @@
-# https://developers.home-assistant.io/docs/add-ons/repository#repository-configuration
-name: Example Home Assistant add-on repository
-url: 'https://github.com/home-assistant/addons-example'
-maintainer: Awesome Maintainer <awesome@example.com>
+name: NGINX SSL Proxy (Proxy Protocol)
+url: https://github.com/tobsee/addons-nginx-proxy-pp
+maintainer: Tobias Seemann
