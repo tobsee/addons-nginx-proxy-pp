@@ -1,4 +1,4 @@
-version: 0.0.1
+version: 0.0.2
 hassio_api: true
 slug: nginx_proxy_pp
 name: NGINX SSL Proxy (Proxy Protocol)

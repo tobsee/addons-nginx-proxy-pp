@@ -7,6 +7,11 @@
 
 set -e
 
+# Validate split_proxy_protocol configuration
+if bashio::config.true 'split_proxy_protocol' && ! bashio::var.has_value "$(bashio::addon.port 8444)"; then
+    bashio::exit.nok "split_proxy_protocol enabled but port 8444 not mapped - configure in Network settings"
+fi
+
 bashio::log.info "Merging options & variables for template"
 # shellcheck disable=SC2046
 JSON_CONF=$(jq --arg port $(bashio::core.port) \

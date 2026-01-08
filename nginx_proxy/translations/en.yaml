@@ -32,8 +32,9 @@ configuration:
   split_proxy_protocol:
     name: Split Proxy Protocol
     description: >-
-      If enabled, the addon will listen on a separate port (8444) for Proxy
-      Protocol connections.
+      Listen on port 8444 for Proxy Protocol connections while port 443 serves
+      regular HTTPS. Requires real_ip_from configuration and port 8444 mapped in
+      Network settings.
 network:
   443/tcp: HTTPS (SSL) Port
   80/tcp: HTTP (non-SSL) Port

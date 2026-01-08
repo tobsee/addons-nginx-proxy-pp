@@ -86,15 +86,21 @@ If specified, configures Nginx to use Proxy Protocol to get the Real Ip from an 
 
 ### Option `split_proxy_protocol` (optional)
 
-If enabled, proxy protocol traffic is accepted on a separate port (configured via `proxy_protocol_port`) while the main HTTPS port (443) serves HTTPS. This is useful when you need to accept both direct local connections and connections from a load balancer (e.g., HAProxy) that uses proxy protocol.
+Enables split mode where proxy protocol traffic is accepted on port 8444 while port 443 serves regular HTTPS. Useful when accepting both direct connections and connections from a load balancer (e.g., HAProxy) simultaneously.
 
-When disabled (default), the behavior depends on `real_ip_from`:
+**When disabled (default):**
 - If `real_ip_from` is empty: port 443 accepts HTTPS
 - If `real_ip_from` is set: port 443 accepts proxy protocol
 
-When enabled:
-- Port 443 always accepts HTTPS
-- `proxy_protocol_port` accepts proxy protocol
+**When enabled:**
+- Port 443 accepts regular HTTPS
+- Port 8444 accepts proxy protocol
+
+**Requirements:**
+- Set `real_ip_from` with trusted proxy IPs
+- Map port `8444/tcp` in Network settings (Configuration → Show unused optional configuration options → Network)
+
+Addon will fail to start if port 8444 is not mapped.
 
 ## Known issues and limitations
 

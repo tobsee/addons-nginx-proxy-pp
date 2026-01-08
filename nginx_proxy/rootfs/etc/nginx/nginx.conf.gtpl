@@ -29,6 +29,13 @@ http {
     ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305;
     ssl_prefer_server_ciphers off;
 
+    # Common SSL session settings (shared across all servers)
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:MozSSL:10m;
+    ssl_session_tickets off;
+
+    proxy_buffering off;
+
     {{- if .options.cloudflare }}
     include /data/cloudflare.conf;
     {{- end }}
@@ -53,12 +60,10 @@ http {
         return 301 https://$host$request_uri;
     }
 
+    # Main HTTPS server
     server {
         server_name {{ .options.domain }};
 
-        ssl_session_timeout 1d;
-        ssl_session_cache shared:MozSSL:10m;
-        ssl_session_tickets off;
         ssl_certificate /ssl/{{ .options.certfile }};
         ssl_certificate_key /ssl/{{ .options.keyfile }};
 
@@ -83,8 +88,6 @@ http {
         add_header Strict-Transport-Security "{{ .options.hsts }}" always;
         {{- end }}
 
-        proxy_buffering off;
-
         {{- if .options.customize.active }}
         include /share/{{ .options.customize.default }};
         {{- end }}
@@ -100,16 +103,20 @@ http {
             proxy_set_header Connection $connection_upgrade;
             proxy_set_header X-Forwarded-Host $http_host;
             {{- if and .options.real_ip_from (not .options.split_proxy_protocol) }}
+            # Real IP from proxy protocol
             proxy_set_header X-Real-IP $proxy_protocol_addr;
             proxy_set_header X-Forwarded-For $proxy_protocol_addr;
             {{- else }}
+            # Real IP from direct connection
+            proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             {{- end }}
         }
     }
 
-    {{- if .options.split_proxy_protocol }}
-    # Separate proxy protocol server
+    {{- if and .options.split_proxy_protocol .options.real_ip_from }}
+    # Proxy protocol server (split mode)
+    # Port 8444: Internal port for proxy protocol connections
     server {
         server_name {{ .options.domain }};
 
@@ -117,9 +124,6 @@ http {
         listen [::]:8444 ssl proxy_protocol;
         http2 on;
 
-        ssl_session_timeout 1d;
-        ssl_session_cache shared:MozSSL:10m;
-        ssl_session_tickets off;
         ssl_certificate /ssl/{{ .options.certfile }};
         ssl_certificate_key /ssl/{{ .options.keyfile }};
         ssl_dhparam /data/dhparams.pem;
@@ -133,7 +137,9 @@ http {
         add_header Strict-Transport-Security "{{ .options.hsts }}" always;
         {{- end }}
 
-        proxy_buffering off;
+        {{- if .options.customize.active }}
+        include /share/{{ .options.customize.default }};
+        {{- end }}
 
         location / {
             proxy_pass http://homeassistant.local.hass.io:{{ .variables.port }};
