@@ -45,6 +45,8 @@ customize:
 cloudflare: false
 real_ip_from: []
 split_proxy_protocol: false
+mtls: false
+client_certfile: ""
 ```
 
 ### Option: `domain` (required)
@@ -101,6 +103,48 @@ Enables split mode where proxy protocol traffic is accepted on port 8444 while p
 - Map port `8444/tcp` in Network settings (Configuration → Show unused optional configuration options → Network)
 
 Addon will fail to start if port 8444 is not mapped.
+
+### Option `mtls` (optional)
+
+Enables mutual TLS (mTLS) client certificate verification. When enabled, nginx requires clients to present a valid TLS certificate signed by the CA specified in `client_certfile`. Connections without a valid certificate are rejected.
+
+This restricts access to your Home Assistant instance to only clients that possess a trusted certificate, providing an additional layer of authentication beyond passwords.
+
+Works with all connection modes (direct HTTPS, proxy protocol, and split proxy protocol).
+
+**Note:** mTLS is incompatible with Cloudflare proxy, as Cloudflare terminates TLS before traffic reaches nginx. Use only with TCP passthrough load balancers or direct connections.
+
+### Option `client_certfile` (optional)
+
+The CA certificate filename in `/ssl/` used to verify client certificates. Required when `mtls` is enabled.
+
+**Setup:**
+
+1. Generate a CA key and certificate:
+
+   ```bash
+   openssl genrsa -out ca.key 4096
+   openssl req -new -x509 -days 3650 -key ca.key -out ca.pem -subj "/CN=My mTLS CA"
+   ```
+
+2. Generate a client certificate signed by the CA:
+
+   ```bash
+   openssl genrsa -out client.key 4096
+   openssl req -new -key client.key -out client.csr -subj "/CN=client1"
+   openssl x509 -req -days 365 -in client.csr -CA ca.pem -CAkey ca.key -CAcreateserial -out client.pem
+   ```
+
+3. Place `ca.pem` in the `/ssl/` directory on your Home Assistant instance.
+
+4. Configure the addon:
+
+   ```yaml
+   mtls: true
+   client_certfile: ca.pem
+   ```
+
+5. Install the client certificate (`client.pem` + `client.key`) on your devices.
 
 ## Known issues and limitations
 

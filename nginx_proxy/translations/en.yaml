@@ -35,6 +35,17 @@ configuration:
       Listen on port 8444 for Proxy Protocol connections while port 443 serves
       regular HTTPS. Requires real_ip_from configuration and port 8444 mapped in
       Network settings.
+  mtls:
+    name: Mutual TLS (mTLS)
+    description: >-
+      Require clients to present a valid TLS certificate signed by the CA
+      specified in client_certfile. Connections without a valid certificate
+      will be rejected.
+  client_certfile:
+    name: Client CA Certificate
+    description: >-
+      CA certificate file in /ssl/ used to verify client certificates.
+      Required when mTLS is enabled.
 network:
   443/tcp: HTTPS (SSL) Port
   80/tcp: HTTP (non-SSL) Port

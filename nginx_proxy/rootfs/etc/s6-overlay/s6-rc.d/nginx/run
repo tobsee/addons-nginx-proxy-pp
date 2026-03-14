@@ -12,6 +12,18 @@ if bashio::config.true 'split_proxy_protocol' && ! bashio::var.has_value "$(bash
     bashio::exit.nok "split_proxy_protocol enabled but port 8444 not mapped - configure in Network settings"
 fi
 
+# Validate mTLS configuration
+if bashio::config.true 'mtls'; then
+    if ! bashio::config.has_value 'client_certfile'; then
+        bashio::exit.nok "mTLS enabled but client_certfile not set"
+    fi
+    CLIENT_CERT="/ssl/$(bashio::config 'client_certfile')"
+    if ! bashio::fs.file_exists "${CLIENT_CERT}"; then
+        bashio::exit.nok "client_certfile '${CLIENT_CERT}' not found - place CA certificate in /ssl/"
+    fi
+    bashio::log.info "mTLS enabled: requiring client certificates verified by $(bashio::config 'client_certfile')"
+fi
+
 bashio::log.info "Merging options & variables for template"
 # shellcheck disable=SC2046
 JSON_CONF=$(jq --arg port $(bashio::core.port) \

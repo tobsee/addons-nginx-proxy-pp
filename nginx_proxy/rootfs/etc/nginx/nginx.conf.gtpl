@@ -70,6 +70,11 @@ http {
         # dhparams file
         ssl_dhparam /data/dhparams.pem;
 
+        {{- if .options.mtls }}
+        ssl_client_certificate /ssl/{{ .options.client_certfile }};
+        ssl_verify_client on;
+        {{- end }}
+
         {{- if and .options.real_ip_from (not .options.split_proxy_protocol) }}
         listen 443 ssl proxy_protocol;
         listen [::]:443 ssl proxy_protocol;
@@ -127,6 +132,11 @@ http {
         ssl_certificate /ssl/{{ .options.certfile }};
         ssl_certificate_key /ssl/{{ .options.keyfile }};
         ssl_dhparam /data/dhparams.pem;
+
+        {{- if .options.mtls }}
+        ssl_client_certificate /ssl/{{ .options.client_certfile }};
+        ssl_verify_client on;
+        {{- end }}
 
         {{- range .options.real_ip_from }}
         set_real_ip_from {{.}};
